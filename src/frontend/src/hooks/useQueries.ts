@@ -30,11 +30,16 @@ export function useSaveUserConfig() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: UserConfig) => {
+      // Always save to localStorage first — works without authentication
       localStorage.setItem("alertes_theme", data.theme);
       localStorage.setItem("alertes_contact_name", data.contactName);
       localStorage.setItem("alertes_whatsapp", data.whatsapp);
       if (actor) {
-        await actor.saveUserConfig(data);
+        try {
+          await actor.saveUserConfig(data);
+        } catch {
+          // Backend save is best-effort; localStorage is the source of truth
+        }
       }
     },
     onSuccess: () => {
@@ -48,11 +53,17 @@ export function useSaveCallerUserProfile() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (profile: UserProfile) => {
+      // Always save to localStorage first — works without authentication
       localStorage.setItem("alertes_theme", profile.theme);
       localStorage.setItem("alertes_contact_name", profile.contactName);
       localStorage.setItem("alertes_whatsapp", profile.whatsapp);
+      // Try backend save but never fail if it throws (auth not required for core UX)
       if (actor) {
-        await actor.saveCallerUserProfile(profile);
+        try {
+          await actor.saveCallerUserProfile(profile);
+        } catch {
+          // Backend save is best-effort; localStorage is the source of truth
+        }
       }
     },
     onSuccess: () => {
