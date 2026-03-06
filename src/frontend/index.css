@@ -1,0 +1,232 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+
+    /* Light mode — clean white + crimson red */
+    --background: 0.97 0 0;
+    --foreground: 0.08 0 0;
+    --card: 0.93 0 0;
+    --card-foreground: 0.08 0 0;
+    --popover: 0.97 0 0;
+    --popover-foreground: 0.08 0 0;
+    --primary: 0.52 0.22 26;
+    --primary-foreground: 0.97 0 0;
+    --secondary: 0.88 0 0;
+    --secondary-foreground: 0.12 0 0;
+    --muted: 0.91 0 0;
+    --muted-foreground: 0.44 0 0;
+    --accent: 0.52 0.22 26;
+    --accent-foreground: 0.97 0 0;
+    --destructive: 0.52 0.22 26;
+    --destructive-foreground: 0.97 0 0;
+    --border: 0.85 0 0;
+    --input: 0.85 0 0;
+    --ring: 0.52 0.22 26;
+
+    /* Alert colors */
+    --alert-red: 0.52 0.22 26;
+    --alert-red-glow: 0.6 0.2 26;
+    --alert-red-dark: 0.38 0.18 26;
+  }
+
+  .dark {
+    /* Dark mode — deep black + bright crimson */
+    --background: 0.07 0 0;
+    --foreground: 0.95 0 0;
+    --card: 0.11 0.005 260;
+    --card-foreground: 0.95 0 0;
+    --popover: 0.1 0.005 260;
+    --popover-foreground: 0.95 0 0;
+    --primary: 0.58 0.22 26;
+    --primary-foreground: 0.97 0 0;
+    --secondary: 0.15 0.005 260;
+    --secondary-foreground: 0.85 0 0;
+    --muted: 0.14 0.005 260;
+    --muted-foreground: 0.55 0 0;
+    --accent: 0.18 0.01 260;
+    --accent-foreground: 0.9 0 0;
+    --destructive: 0.58 0.22 26;
+    --destructive-foreground: 0.97 0 0;
+    --border: 1 0 0 / 10%;
+    --input: 1 0 0 / 12%;
+    --ring: 0.58 0.22 26;
+
+    /* Alert colors */
+    --alert-red: 0.58 0.22 26;
+    --alert-red-glow: 0.65 0.22 26;
+    --alert-red-dark: 0.42 0.2 26;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* ── Alert button pulse animations ── */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(0.92);
+    opacity: 0.8;
+  }
+}
+
+@keyframes pulse-ring-2 {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.1;
+  }
+  100% {
+    transform: scale(0.85);
+    opacity: 0.5;
+  }
+}
+
+@keyframes pulse-ring-3 {
+  0% {
+    transform: scale(0.78);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.28);
+    opacity: 0.05;
+  }
+  100% {
+    transform: scale(0.78);
+    opacity: 0.3;
+  }
+}
+
+@keyframes alert-flash {
+  0%, 100% { opacity: 1; }
+  25% { opacity: 0.3; }
+  50% { opacity: 1; }
+  75% { opacity: 0.3; }
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gps-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Alert button animations */
+.alert-ring-1 {
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+.alert-ring-2 {
+  animation: pulse-ring-2 2s ease-in-out infinite 0.4s;
+}
+.alert-ring-3 {
+  animation: pulse-ring-3 2s ease-in-out infinite 0.8s;
+}
+
+.alert-flashing {
+  animation: alert-flash 0.3s ease-in-out 3;
+}
+
+.gps-blink {
+  animation: gps-blink 2s ease-in-out infinite;
+}
+
+.fade-in {
+  animation: fade-in 0.4s ease-out forwards;
+}
+
+/* Scan line overlay for dark mode */
+.dark .scan-overlay::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.04) 2px,
+    rgba(0,0,0,0.04) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(var(--alert-red));
+  border-radius: 2px;
+}
+
+/* GPS coordinate display */
+.gps-display {
+  font-family: "Courier New", Courier, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+
+/* Focus ring override for dark theme */
+.dark *:focus-visible {
+  outline: 2px solid oklch(var(--alert-red));
+  outline-offset: 2px;
+}
+
+/* Smooth theme transitions */
+*, *::before, *::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
+}
+
+/* Prevent transition on alert button itself */
+.no-transition, .no-transition * {
+  transition: none !important;
+}
