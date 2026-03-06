@@ -65,7 +65,7 @@ export default function GeolocationScreen({
         }}
       />
 
-      <div className="relative z-10 w-full max-w-sm fade-in">
+      <div className="relative z-10 w-full max-w-sm sm:max-w-md fade-in">
         {/* App title */}
         <div className="text-center mb-10">
           <div className="flex items-center justify-center gap-3 mb-3">

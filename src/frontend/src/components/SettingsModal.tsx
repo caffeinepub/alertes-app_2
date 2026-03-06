@@ -88,7 +88,7 @@ export default function SettingsModal({
       }}
     >
       <div
-        className="w-full max-w-sm rounded-2xl p-6 relative fade-in"
+        className="w-full max-w-sm sm:max-w-md rounded-2xl p-5 sm:p-6 relative fade-in mx-2"
         style={{
           background: "oklch(var(--card))",
           border: "1px solid oklch(0.58 0.22 26 / 0.3)",

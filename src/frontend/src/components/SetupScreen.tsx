@@ -59,7 +59,7 @@ export default function SetupScreen({ theme, onComplete }: SetupScreenProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 py-8 relative overflow-hidden">
       {/* Background */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -77,7 +77,7 @@ export default function SetupScreen({ theme, onComplete }: SetupScreenProps) {
         }}
       />
 
-      <div className="relative z-10 w-full max-w-sm fade-in">
+      <div className="relative z-10 w-full max-w-sm sm:max-w-md fade-in">
         {/* Header */}
         <div className="text-center mb-8">
           <div

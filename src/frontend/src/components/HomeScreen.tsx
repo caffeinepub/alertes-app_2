@@ -33,6 +33,29 @@ function formatCoord(val: number, pos: string, neg: string) {
   return `${deg}°${min}'${sec}"${dir}`;
 }
 
+function buildAlertMessage(
+  coords: GeolocationCoordinates | null,
+  contactName: string,
+): string {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  if (coords) {
+    const mapUrl = `https://maps.google.com/maps?q=${coords.latitude},${coords.longitude}`;
+    const contactLine = contactName ? `Pour: ${contactName}\n` : "";
+    return `🚨 ALERTE - Alertes.App\n\nHeure: ${dateStr}\n${contactLine}\nPosition GPS:\nLat: ${coords.latitude.toFixed(6)}\nLon: ${coords.longitude.toFixed(6)}\nCarte: ${mapUrl}\n\nJ'ai besoin d'aide !`;
+  }
+
+  const contactLine = contactName ? `Pour: ${contactName}\n` : "";
+  return `🚨 ALERTE - Alertes.App\n\nHeure: ${dateStr}\n${contactLine}\nPosition GPS non disponible.\n\nJ'ai besoin d'aide !`;
+}
+
 export default function HomeScreen({
   theme,
   coords,
@@ -87,41 +110,36 @@ export default function HomeScreen({
 
     let message: string;
 
-    if (currentCoords && actor) {
-      const backendCoords: Coordinates = {
-        latitude: currentCoords.latitude,
-        longitude: currentCoords.longitude,
-      };
-      try {
+    // Try backend for enriched message, always fall back to local generation
+    try {
+      if (currentCoords && actor) {
+        const backendCoords: Coordinates = {
+          latitude: currentCoords.latitude,
+          longitude: currentCoords.longitude,
+        };
         message = await actor.generateAlertMessage(backendCoords);
-      } catch {
-        // Fallback message in French
-        const now = new Date();
-        const dateStr = now.toLocaleDateString("fr-FR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        const mapUrl = `https://maps.google.com/maps?q=${currentCoords.latitude},${currentCoords.longitude}`;
-        message = `🚨 ALERTE - Alertes.App\n\nHeure: ${dateStr}\nPosition GPS:\nLat: ${currentCoords.latitude.toFixed(6)}\nLon: ${currentCoords.longitude.toFixed(6)}\nCarte: ${mapUrl}\n\nJ'ai besoin d'aide !`;
+        // Validate backend returned something useful
+        if (!message || message.trim().length < 10) {
+          throw new Error("Empty backend message");
+        }
+      } else {
+        message = buildAlertMessage(currentCoords, contact.contactName);
       }
-    } else {
-      const now = new Date();
-      const dateStr = now.toLocaleDateString("fr-FR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      message = `🚨 ALERTE - Alertes.App\n\nHeure: ${dateStr}\nPosition GPS non disponible.\n\nJ'ai besoin d'aide !`;
+    } catch {
+      // Fallback: always generate message locally
+      message = buildAlertMessage(currentCoords, contact.contactName);
     }
 
     const encodedMsg = encodeURIComponent(message);
     const waUrl = `https://wa.me/${whatsappDigits}?text=${encodedMsg}`;
-    window.open(waUrl, "_blank", "noopener,noreferrer");
+
+    // Open WhatsApp — use location.href on mobile for better app switching
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = waUrl;
+    } else {
+      window.open(waUrl, "_blank", "noopener,noreferrer");
+    }
 
     toast.success(`Alerte envoyée à ${contact.contactName} !`, {
       duration: 4000,
@@ -156,10 +174,10 @@ export default function HomeScreen({
       />
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-4 pt-5 pb-3">
+      <header className="relative z-10 flex items-center justify-between px-3 sm:px-4 pt-4 sm:pt-5 pb-3 gap-2">
         {/* App title */}
         <h1
-          className="text-2xl font-black tracking-tight"
+          className="text-xl sm:text-2xl font-black tracking-tight shrink-0"
           style={{
             color: "oklch(0.65 0.22 26)",
             textShadow:
@@ -173,12 +191,12 @@ export default function HomeScreen({
         </h1>
 
         {/* Action buttons */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           <button
             type="button"
             data-ocid="home.about_button"
             onClick={onAbout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
+            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
             style={{
               background: "oklch(0.58 0.22 26 / 0.1)",
               color:
@@ -187,14 +205,15 @@ export default function HomeScreen({
             }}
             aria-label="À propos"
           >
-            <Info className="w-3.5 h-3.5" />À propos
+            <Info className="w-3.5 h-3.5" />
+            <span className="hidden xs:inline sm:inline">À propos</span>
           </button>
 
           <button
             type="button"
             data-ocid="home.settings_button"
             onClick={() => setSettingsOpen(true)}
-            className="w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
             style={{
               background: "oklch(0.58 0.22 26 / 0.1)",
               border: "1px solid oklch(0.58 0.22 26 / 0.2)",
@@ -210,7 +229,7 @@ export default function HomeScreen({
             type="button"
             data-ocid="home.theme_toggle"
             onClick={onThemeToggle}
-            className="w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
             style={{
               background: "oklch(0.58 0.22 26 / 0.1)",
               border: "1px solid oklch(0.58 0.22 26 / 0.2)",
@@ -230,7 +249,7 @@ export default function HomeScreen({
 
       {/* Divider */}
       <div
-        className="mx-4"
+        className="mx-3 sm:mx-4"
         style={{
           height: "1px",
           background: "oklch(0.58 0.22 26 / 0.15)",
@@ -238,24 +257,24 @@ export default function HomeScreen({
       />
 
       {/* GPS display */}
-      <div className="relative z-10 px-4 py-3">
+      <div className="relative z-10 px-3 sm:px-4 py-3">
         <div
           data-ocid="home.location_display"
-          className="rounded-xl p-3 flex items-start gap-3"
+          className="rounded-xl p-3 flex items-start gap-2 sm:gap-3"
           style={{
             background: "oklch(var(--card))",
             border: "1px solid oklch(0.58 0.22 26 / 0.15)",
           }}
         >
-          <div className="flex items-center gap-2 mt-0.5">
+          <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 shrink-0">
             {currentCoords ? (
               <Navigation
-                className="w-4 h-4 gps-blink flex-shrink-0"
+                className="w-4 h-4 gps-blink"
                 style={{ color: "oklch(0.65 0.22 26)" }}
               />
             ) : (
               <Loader2
-                className="w-4 h-4 animate-spin flex-shrink-0"
+                className="w-4 h-4 animate-spin"
                 style={{ color: "oklch(0.65 0.22 26)" }}
               />
             )}
@@ -321,15 +340,15 @@ export default function HomeScreen({
       </div>
 
       {/* Main alert area */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center py-8 px-4">
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center py-4 sm:py-8 px-4">
         {/* Contact info */}
         {contact.contactName && (
-          <div className="text-center mb-8 fade-in">
+          <div className="text-center mb-6 sm:mb-8 fade-in">
             <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">
               Contact d'urgence
             </p>
             <p
-              className="text-lg font-bold"
+              className="text-base sm:text-lg font-bold"
               style={{
                 color:
                   theme === Theme.dark ? "oklch(0.9 0 0)" : "oklch(0.15 0 0)",
@@ -340,17 +359,22 @@ export default function HomeScreen({
           </div>
         )}
 
-        {/* Alert button with radar rings */}
+        {/* Alert button with radar rings — fully responsive via CSS custom property */}
         <div
           className="relative flex items-center justify-center"
-          style={{ width: 240, height: 240 }}
+          style={
+            {
+              "--btn-size": "min(52vw, 240px)",
+              width: "var(--btn-size)",
+              height: "var(--btn-size)",
+            } as React.CSSProperties
+          }
         >
           {/* Radar rings */}
           <div
             className="absolute rounded-full alert-ring-3"
             style={{
-              width: 240,
-              height: 240,
+              inset: 0,
               background: "transparent",
               border: "2px solid oklch(0.58 0.22 26 / 0.15)",
             }}
@@ -358,8 +382,7 @@ export default function HomeScreen({
           <div
             className="absolute rounded-full alert-ring-2"
             style={{
-              width: 196,
-              height: 196,
+              inset: "10%",
               background: "transparent",
               border: "2px solid oklch(0.58 0.22 26 / 0.25)",
             }}
@@ -367,8 +390,7 @@ export default function HomeScreen({
           <div
             className="absolute rounded-full alert-ring-1"
             style={{
-              width: 152,
-              height: 152,
+              inset: "20%",
               background: "transparent",
               border: "2px solid oklch(0.58 0.22 26 / 0.4)",
             }}
@@ -387,8 +409,7 @@ export default function HomeScreen({
               ${alerting ? "alert-flashing" : ""}
             `}
             style={{
-              width: 160,
-              height: 160,
+              inset: "30%",
               background: alerting
                 ? "oklch(0.45 0.2 26)"
                 : "radial-gradient(circle at 35% 35%, oklch(0.68 0.22 26), oklch(0.45 0.22 26))",
@@ -399,18 +420,21 @@ export default function HomeScreen({
             aria-label="Envoyer une alerte d'urgence"
           >
             {alerting ? (
-              <Loader2 className="w-8 h-8 text-white animate-spin" />
+              <Loader2 className="w-7 h-7 sm:w-8 sm:h-8 text-white animate-spin" />
             ) : (
               <>
                 <span
                   className="text-white font-black text-center leading-tight"
-                  style={{ fontSize: "15px", letterSpacing: "0.05em" }}
+                  style={{
+                    fontSize: "clamp(11px, 3.5vw, 15px)",
+                    letterSpacing: "0.05em",
+                  }}
                 >
                   ALERTE
                 </span>
                 <span
-                  className="text-white/60 text-center"
-                  style={{ fontSize: "11px", marginTop: "4px" }}
+                  className="text-white/60 text-center mt-1"
+                  style={{ fontSize: "clamp(9px, 2.5vw, 11px)" }}
                 >
                   Appuyer
                 </span>
@@ -419,7 +443,7 @@ export default function HomeScreen({
           </button>
         </div>
 
-        <p className="mt-8 text-xs text-muted-foreground text-center max-w-[220px] leading-relaxed">
+        <p className="mt-6 sm:mt-8 text-xs text-muted-foreground text-center max-w-[260px] leading-relaxed">
           Appuyez sur le bouton pour envoyer votre position actuelle via
           WhatsApp à{" "}
           <strong
